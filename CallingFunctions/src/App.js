@@ -1,13 +1,13 @@
 import './App.css';
 import React, { useState } from 'react';
 
-import {createMarketSale,updateListinPrice,approval,createMarketItem,approvalForAll,pairHashpack,  mint,nftSmartContract} from './hashconnect'
+import {createMarketSale,updateListinPrice,approval,createMarketItem,approvalForAll,pairHashpack, startAuction, placeBidInAuction, claimFundsFromEnglishAuction, mint,claimNftFromEnglishAuction,nftSmartContract, cancelAuction, withdrawAuctionBalance, withdrawContractBalance} from './hashconnect'
 
 function App() {
   const [pairingString, setPairingString] = useState('')
     return(
 <div>
- MarketPlace Smart Contract
+    Auction and NFT Smart Contract 
 <br></br>
 <p id='accountid'></p>
         {
@@ -24,9 +24,7 @@ function App() {
         <br></br>
         {/* <button onClick={readGetFn}>readGetFn</button>  */}
 <br></br>
-<button onClick={nftSmartContract}>nftSmartContract</button>
-<br></br>
-<button onClick={mint}>mint</button>
+<button onClick={createMarketSale}>createMarketSale</button> 
 <br></br>
 <button onClick={updateListinPrice}>updateListinPrice</button> 
 <br></br>
@@ -36,10 +34,25 @@ function App() {
 <br></br>
 <button onClick={createMarketItem}>createMarketItem</button>
 <br></br>
-<button onClick={createMarketSale}>createMarketSale</button> 
+<button onClick={nftSmartContract}>nftSmartContract</button>
 <br></br>
+<button onClick={mint}>mint</button>
 <br></br>
+<button onClick={startAuction}>Start the auction</button>
+<br></br>
+<button onClick={placeBidInAuction}>place bid in auction </button>
+<br></br>
+<button onClick={claimFundsFromEnglishAuction}>claimFundsFromEnglishAuction </button>
+<br></br>
+<button onClick={claimNftFromEnglishAuction}>claimNftFromEnglishAuction </button>
+<br></br>
+<button onClick={cancelAuction}>cancelAuction </button>
 
+<br></br>
+<button onClick={withdrawAuctionBalance}>withdrawAuctionBalance</button>
+<br></br>
+<button onClick={withdrawContractBalance}>withdrawContractBalance</button>
+<br></br>
 </div>
     )
 }

@@ -20,10 +20,9 @@ import {
 const  hashconnect = new HashConnect();
 const accountId = "";
 
-
-const marketplacecontract = ContractId.fromString('0.0.2257507') //Use Latest marketplace contract Id
-const nftcontract = ContractId.fromString('0.0.2257747') //Use latest nft contract id
-
+const marketplacecontract = ContractId.fromSolidityAddress('000000000000000000000000000000000044567b')
+const nftcontract = ContractId.fromSolidityAddress('0x3c36bd510fa1c0728e49f198f8f5badb5298e123')  //Use here the address return from calling nftcontract for mint and approval to marketplace
+const auctionSC = ContractId.fromSolidityAddress('0000000000000000000000000000000000448960')
 
 let appMetadata = {
     name: "dApp Example",
@@ -58,6 +57,12 @@ export const pairHashpack = async () => {
     return initData
 }
 
+//Create NFT smart Contract
+//Create Collection
+/**
+ * @param Collectionname 
+ * @param collectionsymbol
+ */
 
 export const nftSmartContract = async() =>{
     const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
@@ -84,19 +89,16 @@ export const nftSmartContract = async() =>{
         const client = Client.forTestnet()
         setTimeout(() => {
             alert('Tx Successfull!');
-        if (rex){
-            
+        if (rex){  
             axios.get(`https://testnet.mirrornode.hedera.com/api/v1/contracts/results/${tid}`).then((response)=> {
                 // handle success
                 console.log(response.data,"data xxxxx");
-                console.log(response.data.created_contract_ids[0])
-                const smartContract=response.data.created_contract_ids[0]
+                console.log(response.data.logs[0].address)
+                const smartContract=response.data.logs[0].address
                 console.log(smartContract.toString(),creatorAddress);
-              })            
+              })
         }
-    }, 10000);
-        
-      
+    }, 10000);     
 }
 
 
@@ -107,12 +109,11 @@ export const mint = async() =>{
     const signer = hashconnect.getSigner(provider)
     const hexaddr = signer.getAccountId();
     const contractAddress = hexaddr.toSolidityAddress();
-    // console.log(hexaddr, contractAddress, "ccccccc");
 
     const sendHbarTx = await new ContractExecuteTransaction()
     .setContractId(nftcontract)
     .setGas(100000)
-    .setFunction('Mint', new ContractFunctionParameters().addAddress(contractAddress).addUint256(1).addString("popopo"))
+    .setFunction('Mint', new ContractFunctionParameters().addAddress(contractAddress).addUint256(11).addString("popopo"))
     .freezeWithSigner(signer)
 
     const tx =await sendHbarTx.executeWithSigner(signer)
@@ -133,7 +134,7 @@ export const approval = async() =>{
         const sendHbarTx = await new ContractExecuteTransaction()
         .setContractId(nftcontract)
         .setGas(10000000)
-        .setFunction("approve", new ContractFunctionParameters().addAddress(evmaddr).addUint256(1))
+        .setFunction("approve", new ContractFunctionParameters().addAddress(evmaddr).addUint256("3"))
         .freezeWithSigner(signer);
 
         const tx =await sendHbarTx.executeWithSigner(signer)
@@ -149,15 +150,15 @@ export const createMarketItem = async() =>{
         console.log(provider, "provider log");
         const signer = hashconnect.getSigner(provider)
         console.log(signer,"signer ssssssssssssss");
-        const evmaddr = nftcontract.toSolidityAddress().toString();
+        const evmaddr = nftcontract.toSolidityAddress();
 
         console.log(evmaddr, "nftevm");
     
         const sendHbarTx = await new ContractExecuteTransaction()
         .setContractId(marketplacecontract)
         .setGas(10000000)
-        .setPayableAmount(2)
-        .setFunction("createMarketItem", new ContractFunctionParameters().addAddress(evmaddr).addUint256(1).addUint256("200000000").addUint256("2")) //param
+        .setPayableAmount(1)
+        .setFunction("createMarketItem", new ContractFunctionParameters().addAddress(evmaddr).addUint256("3").addUint256("200000000").addUint256("3")) //param
         .freezeWithSigner(signer);
 
         const tx =await sendHbarTx.executeWithSigner(signer)
@@ -175,8 +176,8 @@ export const createMarketSale = async() =>{
         const createHbarTx = await new ContractExecuteTransaction()
         .setContractId(marketplacecontract)
         .setGas(10000000)
-        .setPayableAmount(1)
-        .setFunction("createMarketSale", new ContractFunctionParameters().addUint256(1))
+        .setPayableAmount(2)
+        .setFunction("createMarketSale", new ContractFunctionParameters().addUint256("3"))
         .freezeWithSigner(signer);
 
         const tx = await createHbarTx.executeWithSigner(signer)
@@ -201,6 +202,7 @@ export const updateListinPrice = async() =>{
         console.log(tx, "Txxxx");
 }
 
+//Auction SC
 
 export const approvalForAll = async() =>{
     const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
@@ -210,7 +212,7 @@ export const approvalForAll = async() =>{
         const signer = hashconnect.getSigner(provider)
         console.log(signer,"signer ssssssssssssss");
         // const nftaddr = ("0.0.3770161");
-        const contractAddress = marketplacecontract.toSolidityAddress();
+        const contractAddress = auctionSC.toSolidityAddress();
 
 
         const sendHbarTx = await new ContractExecuteTransaction()
@@ -223,3 +225,130 @@ export const approvalForAll = async() =>{
         console.log(tx, "txxxxxxxxxxxxxx");
 }
 
+export const startAuction = async() => {
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+    console.log(hashconnectData)
+    const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+    console.log(provider, "provider log");
+    const signer = hashconnect.getSigner(provider)
+    console.log(signer,"signer ssssssssssssss");
+    const contractAddress = nftcontract.toSolidityAddress();
+
+    const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("startEnglishAuction", new ContractFunctionParameters().addAddressArray([contractAddress]).addUint256Array(["4"]).addUint256("5000000").addUint256("3600").addUint256("1")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const placeBidInAuction = async() => {
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setPayableAmount(1)
+        .setFunction("placeBidInEnglishAuction", new ContractFunctionParameters().addUint256("1").addUint256("100000000")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const claimFundsFromEnglishAuction = async() =>{
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("claimFundsFromEnglishAuction", new ContractFunctionParameters().addUint256("2")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const claimNftFromEnglishAuction = async() =>{
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("claimNftFromEnglishAuction", new ContractFunctionParameters().addUint256("2")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const cancelAuction = async() =>{
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("cancelAuction", new ContractFunctionParameters().addUint256("1")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const withdrawAuctionBalance = async() =>{
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("withdrawAuctionBalance", new ContractFunctionParameters().addUint256("2")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
+
+export const withdrawContractBalance = async() =>{
+    const hashconnectData = JSON.parse(window.localStorage.hashconnectData)
+        console.log(hashconnectData)
+        const provider = hashconnect.getProvider('testnet', hashconnectData.topic , hashconnectData.pairingData[0].accountIds[0])
+        console.log(provider, "provider log");
+        const signer = hashconnect.getSigner(provider)
+        console.log(signer,"signer ssssssssssssss");
+    
+        const sendHbarTx = await new ContractExecuteTransaction()
+        .setContractId(auctionSC)
+        .setGas(10000000)
+        .setFunction("withdrawContractBalance", new ContractFunctionParameters().addUint256("1")) //param
+        .freezeWithSigner(signer);
+
+        const tx =await sendHbarTx.executeWithSigner(signer)
+        console.log(tx, "txxxxxxxxxxxxxx");
+}
